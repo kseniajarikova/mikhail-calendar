@@ -1,0 +1,18 @@
+{
+  "name": "Календарь Михаила",
+  "short_name": "Михаил",
+  "description": "Компактный календарь первого года: сон, возраст, скачки, умелки, зубы и прикорм.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4efe3",
+  "theme_color": "#233c2d",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
