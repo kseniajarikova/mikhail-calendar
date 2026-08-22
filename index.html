@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Календарь Михаила</title>
+  <meta name="description" content="Мобильный календарь первого года: возраст, окна бодрствования, скачки развития, умелки, зубы и прикорм.">
+  <style>
+    :root {
+      --bg: #f7f4ec;
+      --text: #202820;
+      --muted: #5a6655;
+      --green: #20392d;
+      --soft-green: #eef3e7;
+      --gold: #e7cf8d;
+      --line: #dfd9ca;
+      --white: rgba(255, 255, 255, 0.78);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button { font: inherit; }
+
+    .wrap {
+      width: min(100%, 1040px);
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .hero {
+      border-radius: 28px;
+      background: var(--green);
+      color: #fff;
+      padding: 24px 20px;
+      box-shadow: 0 14px 40px rgba(42, 56, 42, 0.08);
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: #6d7a61;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .hero .eyebrow { color: #cbd8bd; }
+
+    h1 {
+      margin: 12px 0 0;
+      max-width: 720px;
+      font-size: clamp(32px, 8vw, 54px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      margin: 4px 0 0;
+      font-size: 22px;
+      line-height: 1.18;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      margin: 8px 0 6px;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .hero p {
+      max-width: 720px;
+      color: #e6eadb;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 20px;
+    }
+
+    .two { grid-template-columns: 1.1fr 0.9fr; }
+    .half { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .tile {
+      display: flex;
+      min-height: 112px;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.10);
+      padding: 14px;
+    }
+
+    .tile span,
+    .tile small {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .tile strong {
+      margin: 8px 0;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .progress {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.20);
+      margin-top: 18px;
+    }
+
+    .progress i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: var(--gold);
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--white);
+      padding: 20px;
+      box-shadow: 0 14px 40px rgba(42, 56, 42, 0.06);
+    }
+
+    .accent { background: #fff7df; }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .pill {
+      flex: 0 0 auto;
+      border: 1px solid #cdd7bd;
+      border-radius: 999px;
+      background: var(--soft-green);
+      color: #40553b;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .timeline-card {
+      display: grid;
+      gap: 14px;
+      border: 1px solid #e3dfd3;
+      border-radius: 18px;
+      background: #fff;
+      padding: 15px;
+    }
+
+    .timeline-card.active {
+      border-color: #b9c99f;
+      background: #f2f7e9;
+    }
+
+    .timeline-topline,
+    .timeline-dates {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      color: #65745c;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .wake-scale {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+      color: #6a6047;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .wake-scale div {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #eadfbe;
+    }
+
+    .wake-scale i {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--green);
+    }
+
+    .skill-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+
+    .check-card,
+    .chip,
+    .plain-button {
+      appearance: none;
+      border: 1px solid #dcd7c9;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+
+    .check-card {
+      min-height: 132px;
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .check-card:hover,
+    .chip:hover,
+    .plain-button:hover {
+      transform: translateY(-1px);
+      border-color: #9aac83;
+    }
+
+    .check-card span {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 999px;
+      background: var(--soft-green);
+      color: #526847;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .check-card strong {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.25;
+    }
+
+    .check-card small {
+      display: block;
+      margin-top: 8px;
+      color: #6b7366;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .check-card.near {
+      border-color: #cabb86;
+      background: #fffaf0;
+    }
+
+    .check-card.checked,
+    .chip.checked {
+      border-color: var(--green);
+      background: var(--green);
+      color: #fff;
+    }
+
+    .check-card.checked span {
+      background: rgba(255, 255, 255, 0.16);
+      color: #e9efd9;
+    }
+
+    .check-card.checked small,
+    .check-card.checked strong {
+      color: #fff;
+    }
+
+    .mini-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      min-height: 42px;
+      border-radius: 999px;
+      padding: 10px 13px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .chip.allergen {
+      border-color: #d8c98c;
+      background: #fffaf0;
+    }
+
+    .chip.allergen.checked {
+      border-color: #8a6a24;
+      background: #8a6a24;
+    }
+
+    .plain-button {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 9px 12px;
+      color: #40553b;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .readiness-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .readiness-list span {
+      border-radius: 14px;
+      background: var(--soft-green);
+      color: #40553b;
+      padding: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .allergen-box {
+      display: none;
+      gap: 12px;
+      margin-top: 18px;
+      border: 1px solid #e4d7a5;
+      border-radius: 20px;
+      background: #fffaf0;
+      padding: 15px;
+    }
+
+    .allergen-box.open { display: grid; }
+
+    .source-note {
+      color: #697264;
+      font-size: 12px;
+      line-height: 1.55;
+      padding: 4px 2px 24px;
+    }
+
+    @media (max-width: 720px) {
+      .wrap { padding: 12px; }
+      .hero { border-radius: 24px; }
+      .hero-grid,
+      .two,
+      .half,
+      .readiness-list {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        border-radius: 20px;
+        padding: 16px;
+      }
+
+      .section-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .skill-grid { grid-template-columns: 1fr; }
+      .plain-button, .pill { width: fit-content; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap grid">
+    <header class="hero">
+      <p class="eyebrow">Календарь Михаила</p>
+      <h1 id="todayAge">Сегодня</h1>
+      <p>Дата рождения: 10 апреля 2026. ПДР: 4 апреля 2026. Скачки развития считаются от ПДР, остальные ориентиры — от даты рождения.</p>
+
+      <div class="grid hero-grid">
+        <div class="tile">
+          <span>Окно бодрствования</span>
+          <strong id="wakeLabel">—</strong>
+          <small>мягкий верхний ориентир за один подход</small>
+        </div>
+        <div class="tile">
+          <span>Возраст от ПДР</span>
+          <strong id="pdrWeeks">—</strong>
+          <small>для бурных периодов и “скачков”</small>
+        </div>
+        <div class="tile">
+          <span>До года</span>
+          <strong id="daysToYear">—</strong>
+          <small id="progressLabel">прогресс: —</small>
+        </div>
+      </div>
+
+      <div class="progress" aria-label="Прогресс до одного года">
+        <i id="yearProgress"></i>
+      </div>
+    </header>
+
+    <section class="grid two">
+      <article class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Ближайшие бурные окна</p>
+            <h2>Что может быть заметно сейчас</h2>
+          </div>
+          <span class="pill">от ПДР</span>
+        </div>
+        <div class="grid" id="leaps"></div>
+      </article>
+
+      <article class="panel accent">
+        <p class="eyebrow">Сон</p>
+        <h2 id="wakeTitle">Максимум за один подход</h2>
+        <p>Это не секундомер и не требование. Если Михаил явно устал раньше, лучше ориентироваться на него. Если бодрствует дольше и не перегуливает, это тоже не повод паниковать.</p>
+        <div class="wake-scale" aria-label="Шкала окна бодрствования">
+          <span>0</span>
+          <div><i id="wakeScale"></i></div>
+          <span>5 ч</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Умелки</p>
+          <h2>Отмечай, когда появилось</h2>
+        </div>
+        <span class="pill" id="skillCount">0</span>
+      </div>
+      <div class="skill-grid" id="skills"></div>
+    </section>
+
+    <section class="grid half">
+      <article class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Зубы</p>
+            <h2>Первые зубы</h2>
+          </div>
+          <span class="pill" id="teethCount">0 отмечено</span>
+        </div>
+        <p>Сроки зубов очень плавают. Здесь просто удобная кнопка “появился”.</p>
+        <div class="mini-grid" id="teeth"></div>
+      </article>
+
+      <article class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Прикорм</p>
+            <h2>Готовность и продукты</h2>
+          </div>
+          <span class="pill" id="foodCount">0 продуктов</span>
+        </div>
+        <div class="readiness-list">
+          <span>держит голову</span>
+          <span>есть пищевой интерес</span>
+          <span>может сидеть с поддержкой</span>
+          <span>не выталкивает еду постоянно</span>
+        </div>
+        <p>До 6 месяцев это скорее знакомство с едой при готовности, чем “надо кормить”. Если есть сомнения по аллергенам или реакции — лучше обсудить с педиатром.</p>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Продукты</p>
+          <h2>Что уже пробовал</h2>
+        </div>
+        <button class="plain-button" id="allergenToggle" type="button">Большая восьмёрка раскрыть</button>
+      </div>
+      <div class="mini-grid" id="foods"></div>
+
+      <div class="allergen-box" id="allergenBox">
+        <div>
+          <h3>Аллергены из “большой восьмёрки”</h3>
+          <p>Отмечай сам факт знакомства. Вводить аллергены лучше по одному, в спокойные дни и без новых продуктов рядом.</p>
+        </div>
+        <div class="mini-grid" id="allergens"></div>
+      </div>
+    </section>
+
+    <footer class="source-note">
+      Ориентиры собраны как личный справочник: вехи развития — CDC, прикорм — AAP/CDC, скачки — Wonder Weeks, окна бодрствования — клинические и sleep-education источники. Это не заменяет врача и не оценивает развитие Михаила.
+    </footer>
+  </main>
+
+  <script>
+    const birthDate = "2026-04-10";
+    const dueDate = "2026-04-04";
+    const storageKey = "mikhail-calendar-v1";
+
+    const wakeWindows = [
+      { fromMonth: 0, toMonth: 1, max: 60, label: "до 1 часа" },
+      { fromMonth: 1, toMonth: 3, max: 120, label: "до 2 часов" },
+      { fromMonth: 3, toMonth: 4, max: 135, label: "до 2 ч 15 мин" },
+      { fromMonth: 4, toMonth: 5, max: 150, label: "до 2 ч 30 мин" },
+      { fromMonth: 5, toMonth: 7, max: 180, label: "до 3 часов" },
+      { fromMonth: 7, toMonth: 10, max: 240, label: "до 4 часов" },
+      { fromMonth: 10, toMonth: 13, max: 300, label: "до 5 часов" }
+    ];
+
+    const leaps = [
+      { number: 1, startWeek: 4, peakWeek: 5, endWeek: 6, title: "Ощущения", hint: "мир может стать громче, ярче и чуть тревожнее" },
+      { number: 2, startWeek: 7, peakWeek: 8, endWeek: 9, title: "Паттерны", hint: "малыш чаще замечает повторяющиеся звуки, движения и лица" },
+      { number: 3, startWeek: 11, peakWeek: 12, endWeek: 13, title: "Плавные переходы", hint: "может активнее следить взглядом и телом за изменениями" },
+      { number: 4, startWeek: 14, peakWeek: 19, endWeek: 20, title: "События", hint: "длинное окно: больше впечатлений, больше усталости" },
+      { number: 5, startWeek: 22, peakWeek: 26, endWeek: 27, title: "Связи", hint: "становится заметнее интерес к расстояниям, людям и предметам" },
+      { number: 6, startWeek: 33, peakWeek: 37, endWeek: 38, title: "Категории", hint: "малыш всё активнее сравнивает предметы, лица и действия" },
+      { number: 7, startWeek: 41, peakWeek: 46, endWeek: 47, title: "Последовательности", hint: "может ярче проявляться желание действовать по-своему" },
+      { number: 8, startWeek: 50, peakWeek: 55, endWeek: 56, title: "Программы", hint: "переход около года: больше самостоятельных действий" }
+    ];
+
+    const skills = [
+      { id: "laughs", title: "Смеётся или хохочет в ответ", category: "Контакт", fromWeek: 16, hint: "часто заметно около 4 месяцев" },
+      { id: "coos", title: "Гулит и отвечает звуками", category: "Речь и звуки", fromWeek: 16, hint: "ооо, ааа, протяжные ответы" },
+      { id: "hands", title: "Разглядывает руки с интересом", category: "Игра и быт", fromWeek: 16, hint: "руки становятся отдельной игрушкой" },
+      { id: "reach-toy", title: "Тянется к игрушке", category: "Игра и быт", fromWeek: 20, hint: "сначала неточно, потом увереннее" },
+      { id: "mouth-explore", title: "Исследует предметы ртом", category: "Игра и быт", fromWeek: 22, hint: "важно следить за безопасным размером" },
+      { id: "roll-tummy-back", title: "Переворачивается с живота на спину", category: "Моторика", fromWeek: 24, hint: "частый ориентир около 6 месяцев" },
+      { id: "push-arms", title: "Опирается на прямые руки на животе", category: "Моторика", fromWeek: 24, hint: "готовит плечи и корпус" },
+      { id: "supported-sit", title: "Сидит с опорой на руки", category: "Моторика", fromWeek: 24, hint: "важно для спокойного знакомства с едой" },
+      { id: "reject-food", title: "Закрывает губы, если больше не хочет", category: "Еда", fromWeek: 24, hint: "полезный сигнал насыщения" },
+      { id: "name", title: "Откликается на имя", category: "Контакт", fromWeek: 36, hint: "обычно хорошо заметно ближе к 9 месяцам" },
+      { id: "babble", title: "Лепечет слогами", category: "Речь и звуки", fromWeek: 36, hint: "ма-ма, ба-ба, да-да без обязательного смысла" },
+      { id: "sit-alone", title: "Сидит без поддержки", category: "Моторика", fromWeek: 36, hint: "корпус держится устойчивее" },
+      { id: "crawl", title: "Ползёт или перемещается своим способом", category: "Моторика", fromWeek: 36, hint: "ползание бывает очень разным" },
+      { id: "wave", title: "Машет пока-пока", category: "Контакт", fromWeek: 48, hint: "жесты начинают работать как речь" },
+      { id: "stand", title: "Встаёт у опоры", category: "Моторика", fromWeek: 48, hint: "часто появляется в промежутке около года" },
+      { id: "first-word", title: "Появилось первое осмысленное слово", category: "Речь и звуки", fromWeek: 48, hint: "мама, папа или своё важное слово" }
+    ];
+
+    const foods = ["Кабачок", "Авокадо", "Брокколи", "Гречка", "Рис", "Яблоко", "Груша", "Банан", "Индейка", "Йогурт без сахара", "Овсянка", "Творог"];
+    const allergens = ["Молочные продукты", "Яйцо", "Арахис", "Орехи", "Рыба", "Ракообразные", "Пшеница", "Соя"];
+    const teeth = ["Нижний центральный левый", "Нижний центральный правый", "Верхний центральный левый", "Верхний центральный правый", "Верхний боковой левый", "Верхний боковой правый", "Нижний боковой левый", "Нижний боковой правый"];
+
+    let state = readState();
+
+    function parseLocalDate(value) {
+      const [year, month, day] = value.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function startOfDay(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function addDays(date, days) {
+      const result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+    }
+
+    function diffDays(from, to) {
+      return Math.floor((startOfDay(to).getTime() - startOfDay(from).getTime()) / 86400000);
+    }
+
+    function formatDate(date) {
+      return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" }).format(date);
+    }
+
+    function formatAge(days) {
+      const weeks = Math.floor(days / 7);
+      const rest = days % 7;
+      const months = Math.floor(days / 30.4375);
+      return `${months} мес. · ${weeks} нед. ${rest} дн.`;
+    }
+
+    function monthAge(days) {
+      return Math.max(0, Math.floor(days / 30.4375));
+    }
+
+    function progress(value, max) {
+      return Math.min(100, Math.max(0, (value / max) * 100));
+    }
+
+    function getWakeWindow(months) {
+      return wakeWindows.find(item => months >= item.fromMonth && months < item.toMonth) || wakeWindows[wakeWindows.length - 1];
+    }
+
+    function readState() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey)) || { skills: {}, foods: {}, allergens: {}, teeth: {} };
+      } catch {
+        return { skills: {}, foods: {}, allergens: {}, teeth: {} };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function count(section) {
+      return Object.values(state[section]).filter(Boolean).length;
+    }
+
+    function toggle(section, id) {
+      state[section][id] = !state[section][id];
+      saveState();
+      render();
+    }
+
+    function makeButton(label, className, onClick) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = className;
+      button.textContent = label;
+      button.addEventListener("click", onClick);
+      return button;
+    }
+
+    function render() {
+      const today = new Date();
+      const born = parseLocalDate(birthDate);
+      const pdr = parseLocalDate(dueDate);
+      const ageDays = diffDays(born, today);
+      const pdrDays = diffDays(pdr, today);
+      const ageWeeks = Math.floor(ageDays / 7);
+      const pdrWeeks = Math.floor(pdrDays / 7);
+      const months = monthAge(ageDays);
+      const wake = getWakeWindow(months);
+      const daysToYear = Math.max(0, diffDays(today, parseLocalDate("2027-04-10")));
+      const yearProgress = progress(ageDays, 365);
+
+      document.getElementById("todayAge").textContent = `Сегодня: ${formatAge(ageDays)}`;
+      document.getElementById("wakeLabel").textContent = wake.label;
+      document.getElementById("wakeTitle").textContent = `Максимум за один подход: ${wake.label}`;
+      document.getElementById("wakeScale").style.width = `${progress(wake.max, 300)}%`;
+      document.getElementById("pdrWeeks").textContent = `${pdrWeeks} нед.`;
+      document.getElementById("daysToYear").textContent = `${daysToYear} дн.`;
+      document.getElementById("progressLabel").textContent = `прогресс: ${Math.round(yearProgress)}%`;
+      document.getElementById("yearProgress").style.width = `${yearProgress}%`;
+
+      const leapBox = document.getElementById("leaps");
+      leapBox.innerHTML = "";
+      leaps
+        .map(leap => ({
+          ...leap,
+          distance: leap.startWeek - pdrWeeks,
+          status: pdrWeeks >= leap.startWeek && pdrWeeks <= leap.endWeek ? "now" : pdrWeeks < leap.startWeek ? "soon" : "past"
+        }))
+        .filter(leap => leap.status === "now" || (leap.status === "soon" && leap.distance <= 14))
+        .slice(0, 3)
+        .forEach(leap => {
+          const card = document.createElement("div");
+          card.className = leap.status === "now" ? "timeline-card active" : "timeline-card";
+          const start = addDays(parseLocalDate(dueDate), leap.startWeek * 7);
+          const peak = addDays(parseLocalDate(dueDate), leap.peakWeek * 7);
+          card.innerHTML = `
+            <div>
+              <div class="timeline-topline">
+                <span>Скачок ${leap.number}</span>
+                <span>${leap.status === "now" ? "сейчас" : `через ${leap.distance} нед.`}</span>
+              </div>
+              <h3>${leap.title}</h3>
+              <p>${leap.hint}</p>
+            </div>
+            <div class="timeline-dates">
+              <span>старт: ${formatDate(start)}</span>
+              <span>пик: ${formatDate(peak)}</span>
+            </div>
+          `;
+          leapBox.appendChild(card);
+        });
+
+      const skillBox = document.getElementById("skills");
+      skillBox.innerHTML = "";
+      skills
+        .filter(skill => skill.fromWeek <= ageWeeks + 10)
+        .forEach(skill => {
+          const checked = Boolean(state.skills[skill.id]);
+          const near = skill.fromWeek >= ageWeeks - 4;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = checked ? "check-card checked" : near ? "check-card near" : "check-card";
+          button.innerHTML = `<span>${skill.category}</span><strong>${skill.title}</strong><small>${skill.hint}</small>`;
+          button.addEventListener("click", () => toggle("skills", skill.id));
+          skillBox.appendChild(button);
+        });
+      document.getElementById("skillCount").textContent = `${count("skills")} из ${skills.length}`;
+
+      renderChips("teeth", teeth, "teeth", "");
+      renderChips("foods", foods, "foods", "");
+      renderChips("allergens", allergens, "allergens", "allergen");
+      document.getElementById("teethCount").textContent = `${count("teeth")} отмечено`;
+      document.getElementById("foodCount").textContent = `${count("foods")} продуктов`;
+    }
+
+    function renderChips(elementId, items, section, extraClass) {
+      const box = document.getElementById(elementId);
+      box.innerHTML = "";
+      items.forEach(item => {
+        const active = Boolean(state[section][item]);
+        const button = makeButton(item, `chip ${extraClass} ${active ? "checked" : ""}`, () => toggle(section, item));
+        box.appendChild(button);
+      });
+    }
+
+    document.getElementById("allergenToggle").addEventListener("click", () => {
+      const box = document.getElementById("allergenBox");
+      const isOpen = box.classList.toggle("open");
+      document.getElementById("allergenToggle").textContent = `Большая восьмёрка ${isOpen ? "свернуть" : "раскрыть"}`;
+    });
+
+    render();
+  </script>
+</body>
+</html>
