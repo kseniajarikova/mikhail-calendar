@@ -293,6 +293,32 @@
       gap: 7px;
     }
 
+    .mark-row {
+      display: grid;
+      gap: 5px;
+    }
+
+    .date-editor {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .date-input {
+      min-height: 32px;
+      border: 1px solid #cfc7b8;
+      border-radius: 10px;
+      background: #fffdf8;
+      color: var(--ink);
+      padding: 5px 7px;
+      font: inherit;
+      font-size: 12px;
+    }
+
     .row-button {
       display: grid;
       grid-template-columns: 20px 1fr auto;
@@ -372,6 +398,47 @@
       color: #fff;
     }
 
+    #teethList {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .chip-entry {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .chip-entry .chip {
+      flex: 1;
+      min-width: 0;
+      text-align: left;
+      white-space: normal;
+    }
+
+    .chip-date {
+      width: 132px;
+      flex: 0 0 132px;
+    }
+
+    .history {
+      margin-top: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+
+    .history summary {
+      color: #53614d;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .history .rows {
+      margin-top: 8px;
+    }
+
     .food-lock {
       background: linear-gradient(135deg, #fffdf7, #e8f0dd);
     }
@@ -390,6 +457,7 @@
       .mini:last-child { grid-column: 1 / -1; }
       .row-button { grid-template-columns: 20px 1fr; }
       .row-button .tag { width: fit-content; }
+      #teethList { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -578,6 +646,17 @@
       return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" }).format(date);
     }
 
+    function inputDate(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatSavedDate(value) {
+      return value ? formatDate(parseDate(value)) : "";
+    }
+
     function formatAge(days) {
       const weeks = Math.floor(days / 7);
       const rest = days % 7;
@@ -599,9 +678,29 @@
 
     function readState() {
       try {
-        return { ...emptyState, ...(JSON.parse(localStorage.getItem(storageKey)) || {}) };
+        const saved = JSON.parse(localStorage.getItem(storageKey)) || {};
+        const result = {
+          skills: { ...(saved.skills || {}) },
+          teeth: { ...(saved.teeth || {}) },
+          foods: { ...(saved.foods || {}) },
+          allergens: { ...(saved.allergens || {}) }
+        };
+        let migrated = false;
+        ["skills", "teeth"].forEach(section => {
+          Object.keys(result[section]).forEach(id => {
+            if (result[section][id] === true) {
+              result[section][id] = inputDate();
+              migrated = true;
+            } else if (!result[section][id]) {
+              delete result[section][id];
+              migrated = true;
+            }
+          });
+        });
+        if (migrated) localStorage.setItem(storageKey, JSON.stringify(result));
+        return result;
       } catch {
-        return { ...emptyState };
+        return { skills: {}, teeth: {}, foods: {}, allergens: {} };
       }
     }
 
@@ -614,9 +713,42 @@
     }
 
     function toggle(section, id) {
-      state[section][id] = !state[section][id];
+      if (state[section][id]) {
+        delete state[section][id];
+      } else {
+        state[section][id] = section === "skills" || section === "teeth" ? inputDate() : true;
+      }
       saveState();
       render();
+    }
+
+    function setMarkDate(section, id, value) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        render();
+        return;
+      }
+      state[section][id] = value;
+      saveState();
+      render();
+    }
+
+    function makeDateEditor(section, id, value, compact = false) {
+      const label = document.createElement("label");
+      label.className = compact ? "date-editor" : "date-editor";
+      if (!compact) {
+        const caption = document.createElement("span");
+        caption.textContent = section === "teeth" ? "Прорезался" : "Появилось";
+        label.appendChild(caption);
+      }
+      const input = document.createElement("input");
+      input.type = "date";
+      input.className = compact ? "date-input chip-date" : "date-input";
+      input.value = value;
+      input.setAttribute("aria-label", section === "teeth" ? "Дата прорезывания" : "Дата появления умелки");
+      input.addEventListener("click", event => event.stopPropagation());
+      input.addEventListener("change", event => setMarkDate(section, id, event.target.value));
+      label.appendChild(input);
+      return label;
     }
 
     function calcMetrics() {
@@ -657,23 +789,40 @@
       }).filter(leap => leap.distance >= -7).slice(0, limit);
     }
 
-    function activeSkills() {
+    function skillsWithTiming() {
       const born = parseDate(birthDate);
       return skills.map(skill => {
         const date = addDays(born, skill.week * 7);
         return { ...skill, date, distance: diffDays(metrics.today, date) };
-      }).filter(skill => Math.abs(skill.distance) <= 30);
+      });
+    }
+
+    function activeSkills() {
+      return skillsWithTiming().filter(skill => Math.abs(skill.distance) <= 30);
+    }
+
+    function archivedSkills() {
+      return skillsWithTiming().filter(skill => state.skills[skill.id] && Math.abs(skill.distance) > 30);
     }
 
     function makeRow(item, section) {
       const checked = Boolean(state[section][item.id]);
+      const wrapper = document.createElement("div");
+      wrapper.className = "mark-row";
+
       const row = document.createElement("button");
       row.type = "button";
       row.className = checked ? "row-button checked" : "row-button";
       const timing = item.distance > 0 ? `через ${item.distance} дн.` : item.distance < 0 ? `${Math.abs(item.distance)} дн. назад` : "сегодня";
-      row.innerHTML = `<span class="box"></span><span><strong>${item.title}</strong><small>${formatDate(item.date)} · ${timing}</small></span><span class="tag">${item.category}</span>`;
+      const saved = checked ? ` · отмечено ${formatSavedDate(state[section][item.id])}` : "";
+      row.innerHTML = `<span class="box"></span><span><strong>${item.title}</strong><small>${formatDate(item.date)} · ${timing}${saved}</small></span><span class="tag">${item.category}</span>`;
       row.addEventListener("click", () => toggle(section, item.id));
-      return row;
+      wrapper.appendChild(row);
+
+      if (checked && (section === "skills" || section === "teeth")) {
+        wrapper.appendChild(makeDateEditor(section, item.id, state[section][item.id]));
+      }
+      return wrapper;
     }
 
     function makeChip(label, section) {
@@ -683,7 +832,14 @@
       button.className = active ? "chip checked" : "chip";
       button.textContent = label;
       button.addEventListener("click", () => toggle(section, label));
-      return button;
+
+      if (section !== "teeth") return button;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "chip-entry";
+      wrapper.appendChild(button);
+      if (active) wrapper.appendChild(makeDateEditor(section, label, state[section][label], true));
+      return wrapper;
     }
 
     function setupTabs() {
@@ -768,6 +924,19 @@
         return;
       }
       items.forEach(item => box.appendChild(makeRow(item, "skills")));
+
+      const history = archivedSkills();
+      if (history.length) {
+        const details = document.createElement("details");
+        details.className = "history";
+        const summary = document.createElement("summary");
+        summary.textContent = `Ранее отмеченные умелки: ${history.length}`;
+        const rows = document.createElement("div");
+        rows.className = "rows";
+        history.forEach(item => rows.appendChild(makeRow(item, "skills")));
+        details.append(summary, rows);
+        box.appendChild(details);
+      }
     }
 
     function renderTeeth() {
