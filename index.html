@@ -398,6 +398,51 @@
       color: #fff;
     }
 
+    .custom-food-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 7px;
+      margin: 12px 0 10px;
+    }
+
+    .custom-food-input {
+      width: 100%;
+      min-width: 0;
+      min-height: 40px;
+      border: 1px solid #cfc7b8;
+      border-radius: 13px;
+      background: #fffdf8;
+      color: var(--ink);
+      padding: 9px 11px;
+      font: inherit;
+      font-size: 14px;
+    }
+
+    .custom-food-input:focus {
+      border-color: var(--green);
+      outline: 3px solid rgba(35, 60, 45, .12);
+    }
+
+    .custom-food-submit {
+      min-height: 40px;
+      border: 1px solid var(--green);
+      border-radius: 13px;
+      background: var(--green);
+      color: #fff;
+      cursor: pointer;
+      padding: 9px 13px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .custom-food-message {
+      min-height: 17px;
+      margin: -4px 2px 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
     #teethList {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -618,7 +663,7 @@
     const foods = ["Кабачок", "Авокадо", "Брокколи", "Гречка", "Рис", "Яблоко", "Груша", "Банан", "Индейка", "Йогурт без сахара", "Овсянка", "Творог"];
     const allergens = ["Молочные продукты", "Яйцо", "Арахис", "Орехи", "Рыба", "Ракообразные", "Пшеница", "Соя"];
 
-    const emptyState = { skills: {}, teeth: {}, foods: {}, allergens: {} };
+    const emptyState = { skills: {}, teeth: {}, foods: {}, allergens: {}, customFoods: [] };
     let state = readState();
     let metrics = {};
     let currentView = "today";
@@ -683,7 +728,8 @@
           skills: { ...(saved.skills || {}) },
           teeth: { ...(saved.teeth || {}) },
           foods: { ...(saved.foods || {}) },
-          allergens: { ...(saved.allergens || {}) }
+          allergens: { ...(saved.allergens || {}) },
+          customFoods: Array.isArray(saved.customFoods) ? [...saved.customFoods] : []
         };
         let migrated = false;
         ["skills", "teeth"].forEach(section => {
@@ -700,7 +746,7 @@
         if (migrated) localStorage.setItem(storageKey, JSON.stringify(result));
         return result;
       } catch {
-        return { skills: {}, teeth: {}, foods: {}, allergens: {} };
+        return { skills: {}, teeth: {}, foods: {}, allergens: {}, customFoods: [] };
       }
     }
 
@@ -720,6 +766,27 @@
       }
       saveState();
       render();
+    }
+
+    function addCustomFood(value) {
+      const clean = value.trim().replace(/\s+/g, " ").slice(0, 60);
+      if (!clean) return;
+
+      const existing = [...foods, ...state.customFoods].find(item =>
+        item.toLocaleLowerCase("ru-RU") === clean.toLocaleLowerCase("ru-RU")
+      );
+
+      const label = existing || clean;
+      if (!existing) state.customFoods.push(label);
+      state.foods[label] = true;
+      saveState();
+      render();
+
+      const message = document.getElementById("customFoodMessage");
+      if (message) message.textContent = existing
+        ? `«${label}» уже есть в списке — отметила продукт.`
+        : `Добавлено: ${label}`;
+      document.getElementById("customFoodInput")?.focus();
     }
 
     function setMarkDate(section, id, value) {
@@ -956,11 +1023,22 @@
       box.innerHTML = `
         <div class="section-title"><h2>Прикорм</h2><span class="pill">${count("foods")} продуктов</span></div>
         <p class="compact-note">Отмечай факт знакомства. Аллергены лучше вводить по одному и в спокойные дни.</p>
+        <form class="custom-food-form" id="customFoodForm">
+          <input class="custom-food-input" id="customFoodInput" type="text" maxlength="60" autocomplete="off" placeholder="Другой продукт" aria-label="Название другого продукта">
+          <button class="custom-food-submit" type="submit">Добавить</button>
+        </form>
+        <p class="custom-food-message" id="customFoodMessage" aria-live="polite"></p>
         <div class="chip-grid" id="foodsList"></div>
         <div class="section-title" style="margin-top:14px"><h2>Большая восьмёрка</h2><span class="pill">${count("allergens")} отмечено</span></div>
         <div class="chip-grid" id="allergensList"></div>
       `;
-      foods.forEach(item => document.getElementById("foodsList").appendChild(makeChip(item, "foods")));
+      [...foods, ...state.customFoods].forEach(item =>
+        document.getElementById("foodsList").appendChild(makeChip(item, "foods"))
+      );
+      document.getElementById("customFoodForm").addEventListener("submit", event => {
+        event.preventDefault();
+        addCustomFood(document.getElementById("customFoodInput").value);
+      });
       allergens.forEach(item => document.getElementById("allergensList").appendChild(makeChip(item, "allergens")));
     }
 
